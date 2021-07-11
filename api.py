@@ -22,16 +22,7 @@ def send_js(path):
 
 @app.route("/", methods=['POST', 'GET'])
 def index():
-    if request.method == "POST":
-        f = open('./file.wav', 'wb')
-        f.write(request.get_data("audio_data"))
-        f.close()
-        if os.path.isfile('./file.wav'):
-            print("./file.wav exists")
-
-        return render_template('index.html', request="POST")
-    else:
-        return render_template("index.html")
+    return render_template("index.html")
 
 
 @app.route("/upload.php", methods=['POST', 'GET'])
