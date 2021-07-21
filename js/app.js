@@ -5,7 +5,6 @@ var recordingNotStopped; // User pressed record button and keep talking, still n
 const trackLengthInMS = 1000; // Length of audio chunk in miliseconds
 const maxNumOfSecs = 1000; // Number of mili seconds we support per recording (1 second)
 
-
 // Shim for AudioContext when it's not available.
 var AudioContext = window.AudioContext || window.webkitAudioContext;
 var audioContext //audio context to help us record
@@ -133,10 +132,16 @@ function createWaveBlob(blob) {
             console.log("Server returned: ", e.target.responseText);
         }
     };
-    var fd = new FormData();
-    fd.append("audio_data", blob, filename);
-    xhr.open("POST", "upload.php", true);
-    xhr.send(fd);
+
+    var socket = io();
+    socket.on('connect', function () {
+        socket.emit('my event', {data: 'I\'m connected!'});
+    });
+
+    // var fd = new FormData();
+    // fd.append("audio_data", blob, filename);
+    // xhr.open("POST", "upload.php", true);
+    // xhr.send(fd);
 
     //li.appendChild(document.createTextNode(" "))//add a space in between
     //li.appendChild(upload)//add the upload link to li

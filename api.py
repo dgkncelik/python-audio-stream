@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import io
 
+import socketio
 from flask import Flask
 from flask import request
 from flask import render_template
@@ -8,9 +9,12 @@ import os
 import pyaudio
 import wave
 import soundfile
+from flask_socketio import SocketIO
 
 app = Flask(__name__, static_folder="js",
             template_folder="templates")
+app.config['SECRET_KEY'] = 'test'
+skt = SocketIO(app)
 
 p = pyaudio.PyAudio()
 
@@ -58,5 +62,11 @@ def upload():
     return "OK"
 
 
+@skt.on('my event')
+def handle_message(data):
+    print('received message: ' + str(data))
+
+
 if __name__ == "__main__":
-    app.run()
+    skt.run(app)
+    #app.run()
