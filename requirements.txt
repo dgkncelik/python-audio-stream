@@ -3,3 +3,5 @@ PyAudio==0.2.11
 SoundFile==0.10.3.post1
 Flask-SocketIO
 simple-websocket
+python-engineio
+python-socketio

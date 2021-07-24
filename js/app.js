@@ -12,6 +12,9 @@ var audioContext //audio context to help us record
 var recordButton = document.getElementById("recordButton");
 var stopButton = document.getElementById("stopButton");
 
+var socket = io();
+socket.connect();
+
 //Event handlers for above 2 buttons
 recordButton.addEventListener("click", startRecording);
 stopButton.addEventListener("click", stopRecording);
@@ -92,60 +95,16 @@ function stopRecording() {
 
     //stop microphone access
     gumStream.getAudioTracks()[0].stop();
+    socket.disconnect();
 }
 
-function createWaveBlob(blob) {
-    var url = URL.createObjectURL(blob);
-    var au = document.createElement('audio');
-    var li = document.createElement('li');
-    var link = document.createElement('a');
-
-    //name of .wav file to use during upload and download (without extendion)
-    var filename = new Date().toISOString();
-
-    //add controls to the <audio> element
-    au.controls = true;
-    au.src = url;
-
-    //save to disk link
-    link.href = url;
-    link.download = filename + ".wav"; //download forces the browser to donwload the file using the  filename
-    link.innerHTML = "Save to disk";
-
-    //add the new audio element to li
-    //li.appendChild(au);
-
-    //add the filename to the li
-    //li.appendChild(document.createTextNode(filename + ".wav "))
-
-    //add the save to disk link to li
-    //li.appendChild(link);
-
-    //upload link
-    //var upload = document.createElement('a');
-    //upload.href = "#";
-    //upload.innerHTML = "Upload";
-
-    var xhr = new XMLHttpRequest();
-    xhr.onload = function (e) {
-        if (this.readyState === 4) {
-            console.log("Server returned: ", e.target.responseText);
-        }
-    };
-
-    var socket = io();
-    socket.on('connect', function () {
-        socket.emit('my event', {data: 'I\'m connected!'});
-    });
-
-    // var fd = new FormData();
-    // fd.append("audio_data", blob, filename);
-    // xhr.open("POST", "upload.php", true);
-    // xhr.send(fd);
-
-    //li.appendChild(document.createTextNode(" "))//add a space in between
-    //li.appendChild(upload)//add the upload link to li
-
-    //add the li element to the ol
-    //recordingsList.appendChild(li);
+async function createWaveBlob(blob) {
+    // let tempBuffer = await new Response(blob).arrayBuffer();
+    // var bufView = new Uint8Array(tempBuffer);
+    // // var b64encoded = btoa(String.fromCharCode.apply(null, bufView));
+    // var array = [].slice.call(bufView)
+    // ILK 19 KARAKTERI KALDIR BINARY OLARAK GORSUN SONRA BUNU PYTHON TARAFINDA BIRLESTIR
+    var newBlob = blob.slice(19, blob.size)
+    socket.emit('audio', newBlob);
+    //socket.emit('message', array)
 }

@@ -1,22 +1,35 @@
 # -*- coding: utf-8 -*-
 import io
-
-import socketio
 from flask import Flask
-from flask import request
 from flask import render_template
-import os
 import pyaudio
 import wave
-import soundfile
 from flask_socketio import SocketIO
+import json
 
 app = Flask(__name__, static_folder="js",
             template_folder="templates")
 app.config['SECRET_KEY'] = 'test'
-skt = SocketIO(app)
 
+
+class jhandler(object):
+
+    def loads(self, o, **kwargs):
+        print('TEST')
+        print(o)
+        return o
+
+    def dumps(self, o, **kwargs):
+        print('TEST')
+        print(o)
+        return json.dumps(o)
+
+
+jo = jhandler()
+
+skt = SocketIO(app, engineio_logger=True, logger=True)
 p = pyaudio.PyAudio()
+AUDIO_CHUNK = 4096
 
 
 @app.route('/js/<path:path>')
@@ -29,44 +42,56 @@ def index():
     return render_template("index.html")
 
 
-@app.route("/upload.php", methods=['POST', 'GET'])
-def upload():
+def play_audio_chunk(audio_chunk):
     file_object = io.BytesIO()
-    # file_object = open('inMemoryFileObject', 'rwb')
-    request.files['audio_data'].save(file_object)
-    # file_object.close()
+    # b = list(audio_chunk)
+    # ac = bytes(b)
+    # ac = bytes(audio_chunk, encoding="raw_unicode_escape")
+    # BINARYIN NUNE WAVE ETIKETINI EKLE O SEKILDE GONDER
+    file_object.write(audio_chunk)
     file_object.seek(0)
-    chunk = 4096
 
-    # open a wav format music
-    f = wave.open(file_object, "rb")
+    wave_file = wave.open(file_object, "rb")
     # instantiate PyAudio
 
     # open stream
-    stream = p.open(format=p.get_format_from_width(f.getsampwidth()),
-                    channels=f.getnchannels(),
-                    rate=f.getframerate(),
+    stream = p.open(format=p.get_format_from_width(wave_file.getsampwidth()),
+                    channels=wave_file.getnchannels(),
+                    rate=wave_file.getframerate(),
                     output=True)
     # read data
-    data = f.readframes(chunk)
+    data = wave_file.readframes(AUDIO_CHUNK)
 
     # play stream
     while data:
         stream.write(data)
-        data = f.readframes(chunk)
+        data = wave_file.readframes(AUDIO_CHUNK)
 
-        # stop stream
     stream.stop_stream()
     stream.close()
 
     return "OK"
 
 
-@skt.on('my event')
-def handle_message(data):
-    print('received message: ' + str(data))
+# @skt.default_exception_handler()
+# def error_handler(e):
+#     print('An error has occurred: ' + str(e))
+
+
+# @skt.on_error()
+# def test(test22):
+#     print('test')
+#
+# skt.default_exception_handler = test
+#
+
+@skt.on('audio')
+def handle_audio_chunk(data):
+    #print("data retrieved")
+    #print(str(data))
+    return play_audio_chunk(data)
 
 
 if __name__ == "__main__":
     skt.run(app)
-    #app.run()
+
